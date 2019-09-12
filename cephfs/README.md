@@ -1,4 +1,5 @@
 # cephfs-provision 对接kubernetns
+![image](https://github.com/chenhuaicong/cloud/blob/master/kubernetes-ceph.jpg?raw=true)
 
 
 
