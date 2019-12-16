@@ -1,0 +1,134 @@
+# Create an OSEv3 group that contains the master, nodes, etcd, and lb groups.
+# The lb group lets Ansible configure HAProxy as the load balancing solution.
+# Comment lb out if your load balancer is pre-configured.
+[OSEv3:children]
+masters
+nodes
+etcd
+#lb
+new_nodes
+
+# Set variables common for all OSEv3 hosts
+[OSEv3:vars]
+ansible_ssh_user=root
+openshift_deployment_type=origin
+openshift_master_api_port=443
+openshift_master_console_port=443
+
+
+#Configuring Cluster Metrics
+openshift_metrics_install_metrics=true
+openshift_metrics_hawkular_hostname=metrics-docker-dev.ky-tech.com.cn
+#openshift_metrics_cassandra_storage_type=pv
+#openshift_metrics_cassandra_pvc_storage_class_name=openshift-rbd
+#openshift_metrics_storage_access_modes=['ReadWriteOnce']
+#openshift_metrics_cassandra_pvc_size=200G
+openshift_metrics_cassandra_replicas=2
+openshift_metrics_hawkular_replicas=2
+openshift_metrics_cassandra_requests_cpu=1000m
+openshift_metrics_cassandra_limits_cpu=2000m
+openshift_metrics_cassandra_requests_memory=2Gi
+openshift_metrics_cassandra_limits_memory=2Gi
+openshift_metrics_hawkular_requests_cpu=1000m
+openshift_metrics_hawkular_limits_cpu=2000m
+openshift_metrics_hawkular_requests_memory=2Gi
+openshift_metrics_hawkular_limits_memory=2Gi
+openshift_metrics_heapster_requests_cpu=500m
+openshift_metrics_heapster_limits_cpu=1000m
+openshift_metrics_heapster_requests_memory=1Gi
+openshift_metrics_heapster_limits_memory=2Gi
+#
+openshift_metrics_cassandra_nodeselector={"node-role.kubernetes.io/infra":"true"}
+openshift_metrics_hawkular_nodeselector={"node-role.kubernetes.io/infra":"true"}
+openshift_metrics_heapster_nodeselector={"node-role.kubernetes.io/infra":"true"}
+
+#Configuring Cluster Logging
+openshift_logging_install_logging=false
+#openshift_logging_es_nodeselector={"node-role.kubernetes.io/infra":"true"}
+#openshift_logging_elasticsearch_storage_type=pvc
+#openshift_logging_es_pvc_storage_class_name=cephfs
+#openshift_logging_storage_access_modes=['ReadWriteMany']
+#openshift_logging_storage_volume_name=logging
+#openshift_logging_storage_volume_size=1000Gi
+
+
+#prometheus
+openshift_cluster_monitoring_operator_install=true
+openshift_cluster_monitoring_operator_prometheus_storage_enabled=true
+openshift_cluster_monitoring_operator_alertmanager_storage_enabled=true
+openshift_cluster_monitoring_operator_node_selector={"node-role.kubernetes.io/infra":"true"}
+openshift_cluster_monitoring_operator_prometheus_storage_class_name=ceph
+openshift_cluster_monitoring_operator_alertmanager_storage_class_name=ceph
+openshift_cluster_monitoring_operator_prometheus_storage_capacity=200Gi
+openshift_cluster_monitoring_operator_alertmanager_storage_capacity=50Gi
+
+
+
+# uncomment the following to enable htpasswd authentication; defaults to AllowAllPasswordIdentityProvider
+#openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
+openshift_master_identity_providers=[{'name': 'my_ldap_provider', 'challenge': 'true', 'login': 'true', 'kind': 'LDAPPasswordIdentityProvider', 'attributes': {'id': ['sAMAccountName'], 'email': ['mail'], 'name': ['cn'], 'preferredUsername': ['uid']}, 'bindDN': 'CN=dockerservice,OU=Server Users,DC=ky-tech,DC=com,DC=cn', 'bindPassword': 'PXxeDhuUPkp4RbrV', 'insecure': 'false', 'ca':'/root/ky-ca.crt', 'url': 'ldaps://SZPBS-PWP-DC02.ky-tech.com.cn:636/DC=ky-tech,DC=com,DC=cn?sAMAccountName'}]
+openshift_disable_check=memory_availability,disk_availability,docker_image_availability,docker_storage
+
+# 使用多租户网络
+os_sdn_network_plugin_name=redhat/openshift-ovs-multitenant
+
+# Native high availbility cluster method with optional load balancer.
+# If no lb group is defined installer assumes that a load balancer has
+# been preconfigured. For installation the value of
+# openshift_master_cluster_hostname must resolve to the load balancer
+# or to one or all of the masters defined in the inventory if no load
+# balancer is present.
+openshift_master_cluster_method=native
+openshift_master_cluster_hostname=in-docker-dev.ky-tech.com.cn
+openshift_master_cluster_public_hostname=docker-dev.ky-tech.com.cn
+openshift_master_default_subdomain=ky-tech.com.cn
+openshift_master_overwrite_named_certificates=true
+openshift_master_named_certificates=[{"certfile": "/root/cert/ky-tech.com.cn_bundle.crt", "keyfile": "/root/cert/ky-tech.com.cn.key", "names": ["docker-dev.ky-tech.com.cn"]}]
+
+# apply updated node defaults
+#openshift_node_groups=[{'name': 'node-config-master', 'labels': ['node-role.kubernetes.io/master=true']}, {'name': 'node-config-infra', 'labels': ['node-role.kubernetes.io/infra=true']}, {'name': 'node-config-compute', 'labels': ['node-role.kubernetes.io/compute=true'], 'edits': [{ 'key': 'kubeletArguments.eviction-pressure-transition-period','value': ['2m']},{ 'key': 'kubeletArguments.pods-per-core','value': ['128']},{ 'key': 'kubeletArguments.max-pods','value': ['250']},{ 'key': 'kubeletArguments.eviction-hard','value': ['memory.available<100Mi']]}]
+openshift_node_groups=[{'name': 'node-config-master', 'labels': ['node-role.kubernetes.io/master=true']}, {'name': 'node-config-infra', 'labels': ['node-role.kubernetes.io/infra=true']}, {'name': 'node-config-compute', 'labels': ['node-role.kubernetes.io/compute=true'], 'edits': [{ 'key': 'kubeletArguments.pods-per-core','value': ['80']}]}]
+
+openshift_is_atomic=false
+ansible_distribution=centos
+
+openshift_docker_options=" --log-driver=json-file --insecure-registry 172.30.0.0/16 --insecure-registry registry-dev.ky-tech.com.cn --log-opt max-size=10M --log-opt max-file=3 "
+
+#配置router 默认证书
+openshift_hosted_router_certificate={"certfile": "/root/cert/ky-tech.com.cn_bundle.crt", "keyfile": "/root/cert/ky-tech.com.cn.key", "cafile": "/root/cert/root_bundle.crt"}
+#Registry Route Variables
+openshift_hosted_registry_routehost=register-dev.ky-tech.com.cn
+openshift_hosted_registry_routetermination=reencrypt
+openshift_hosted_registry_routecertificates={"certfile": "/root/cert/ky-tech.com.cn_bundle.crt", "keyfile": "/root/cert/ky-tech.com.cn.key", "cafile": "/root/cert/root_bundle.crt"}
+
+# 配置会话
+openshift_master_session_name = ssn 
+openshift_master_session_max_seconds = 3600
+
+# host group for masters
+[masters]
+szpbs-okd-prd-master1
+szpbs-okd-prd-master2
+szpbs-okd-prd-master3
+
+# host group for etcd
+[etcd]
+szpbs-okd-prd-master1
+szpbs-okd-prd-master2
+szpbs-okd-prd-master3
+
+# Specify load balancer host
+#[lb]
+#szpbs-okd-prd-node2
+
+# host group for nodes, includes region info
+[nodes]
+szpbs-okd-prd-master[1:3] openshift_node_group_name='node-config-master'
+szpbs-okd-prd-node[1:5] openshift_node_group_name='node-config-compute'
+szpbs-okd-prd-node[8:10] openshift_node_group_name='node-config-compute'
+szpbs-okd-prd-infra-node2 openshift_node_group_name='node-config-infra'
+szpbs-okd-prd-infra-node1 openshift_node_group_name='node-config-infra'
+
+[new_nodes]
+szpbs-okd-prd-node6 openshift_node_group_name='node-config-compute'
+szpbs-okd-prd-node7 openshift_node_group_name='node-config-compute'
