@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: web-convert-chinese
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  cephfs:
+    monitors:
+      - szpbs-okd-prd-cephfs1:6789
+      - szpbs-okd-prd-cephfs2:6789
+      - szpbs-okd-prd-cephfs3:6789
+    user: admin
+    path: /openshift-dev/openshift-web-console/web-convert-chinese/
+    secretRef:
+      name: ceph-secret
+    readOnly: false
+  persistentVolumeReclaimPolicy: Delete

@@ -1,0 +1,14 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  labels:
+    run: eureka
+  name: eureka
+spec:
+  host: example2.regionone.ky-tech.com.cn
+  port:
+    targetPort: tcp
+  to:
+    kind: Service
+    name: eureka
+    weight: 100

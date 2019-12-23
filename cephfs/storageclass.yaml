@@ -5,9 +5,11 @@ metadata:
   annotations:
     storageclass.kubernetes.io/is-default-class: "true"
 provisioner: ceph.com/cephfs
+#allowVolumeExpansion: true
 parameters:
     monitors: 10.122.20.214:6789,10.122.20.215:6789,10.122.20.216:6789
     adminId: admin
-    adminSecretName: ceph-secret-admin
+    adminSecretName: ceph-secret
     adminSecretNamespace: "kube-system"
-    claimRoot: /volumes/kubernetes
+#    claimRoot: /volumes/kubernetes/
+    claimRoot: /volumes/openshift-dev/
