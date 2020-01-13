@@ -12,13 +12,13 @@ spec:
       labels:
         k8s-app: log-pilot
     spec:
-#      tolerations:
-#      - key: node-role.kubernetes.io/master
-#        effect: NoSchedule
-#      - operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        effect: NoSchedule
+      - operator: Exists
       containers:
       - name: log-pilot
-        image: registry.cn-hangzhou.aliyuncs.com/acs/log-pilot:0.9.6-filebeat
+        image: registry.cn-hangzhou.aliyuncs.com/acs/log-pilot:0.9.7-filebeat
         env:
           - name: "LOGGING_OUTPUT"
             value: "kafka"
@@ -29,6 +29,8 @@ spec:
               fieldRef:
                 fieldPath: spec.nodeName
         volumeMounts:
+        - name: applogs
+          mountPath: /host/var/lib/origin/openshift.local.volumes
         - name: sock
           mountPath: /var/run/docker.sock
         - name: logs
@@ -49,6 +51,9 @@ spec:
       serviceAccount: log
       terminationGracePeriodSeconds: 30
       volumes:
+      - name: applogs
+        hostPath:
+          path: /var/lib/origin/openshift.local.volumes
       - name: sock
         hostPath:
           path: /var/run/docker.sock

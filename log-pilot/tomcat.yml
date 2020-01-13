@@ -10,9 +10,9 @@ spec:
   - name: tomcat
     image: "tomcat:7.0"
     env:
-    - name: aliyun_logs_catalina
+    - name: aliyun_logs_erp-java3-test-catalina
       value: "stdout"
-    - name: aliyun_logs_access
+    - name: aliyun_logs_erp-java3-test-access
       value: "/usr/local/tomcat/logs/catalina.*.log"
     volumeMounts:
       - name: tomcat-log
