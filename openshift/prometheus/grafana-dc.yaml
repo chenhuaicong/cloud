@@ -1,0 +1,82 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  creationTimestamp: 2020-01-11T09:04:09Z
+  generation: 3
+  labels:
+    run: grafana
+  name: grafana
+  namespace: cephfs
+  resourceVersion: "51490211"
+  selfLink: /apis/apps.openshift.io/v1/namespaces/cephfs/deploymentconfigs/grafana
+  uid: 53e05c85-3451-11ea-9ae3-00505685e215
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    run: grafana
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: {}
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 600
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: grafana
+    spec:
+      containers:
+      - env:
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: passw0rd
+        image: registry-dev.ky-tech.com.cn/cephfs/grafana
+        imagePullPolicy: Always
+        name: grafana
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/grafana
+          name: grafana-data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: grafana-data
+        persistentVolumeClaim:
+          claimName: grafana-pvc
+  test: false
+  triggers:
+  - type: ConfigChange
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: 2020-01-11T09:59:12Z
+    lastUpdateTime: 2020-01-11T09:59:15Z
+    message: replication controller "grafana-3" successfully rolled out
+    reason: NewReplicationControllerAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: 2020-04-13T15:17:16Z
+    lastUpdateTime: 2020-04-13T15:17:16Z
+    message: Deployment config has minimum availability.
+    status: "True"
+    type: Available
+  details:
+    causes:
+    - type: ConfigChange
+    message: config change
+  latestVersion: 3
+  observedGeneration: 3
+  readyReplicas: 1
+  replicas: 1
+  unavailableReplicas: 0
+  updatedReplicas: 1

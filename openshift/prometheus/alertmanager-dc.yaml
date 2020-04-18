@@ -1,0 +1,80 @@
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  creationTimestamp: 2020-01-12T08:38:20Z
+  generation: 2
+  labels:
+    run: alertmanager
+  name: alertmanager
+  namespace: cephfs
+  resourceVersion: "52301167"
+  selfLink: /apis/apps.openshift.io/v1/namespaces/cephfs/deploymentconfigs/alertmanager
+  uid: e32dc575-3516-11ea-99ad-0050568596c7
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    run: alertmanager
+  strategy:
+    activeDeadlineSeconds: 21600
+    resources: {}
+    rollingParams:
+      intervalSeconds: 1
+      maxSurge: 25%
+      maxUnavailable: 25%
+      timeoutSeconds: 600
+      updatePeriodSeconds: 1
+    type: Rolling
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: alertmanager
+    spec:
+      containers:
+      - image: registry-dev.ky-tech.com.cn/cephfs/alertmanager:v0.20.0
+        imagePullPolicy: IfNotPresent
+        name: alertmanager
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/alertmanager
+          name: alertmanager
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - configMap:
+          defaultMode: 420
+          name: alertmanager-config
+        name: alertmanager
+  test: false
+  triggers:
+  - type: ConfigChange
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: 2020-01-12T08:50:36Z
+    lastUpdateTime: 2020-01-12T08:50:39Z
+    message: replication controller "alertmanager-2" successfully rolled out
+    reason: NewReplicationControllerAvailable
+    status: "True"
+    type: Progressing
+  - lastTransitionTime: 2020-04-15T11:35:56Z
+    lastUpdateTime: 2020-04-15T11:35:56Z
+    message: Deployment config has minimum availability.
+    status: "True"
+    type: Available
+  details:
+    causes:
+    - type: ConfigChange
+    message: config change
+  latestVersion: 2
+  observedGeneration: 2
+  readyReplicas: 1
+  replicas: 1
+  unavailableReplicas: 0
+  updatedReplicas: 1

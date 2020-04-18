@@ -24,11 +24,23 @@ scrape_configs:
     # scheme defaults to 'http'.
     static_configs:
     - targets: ['localhost:9090']
-
+  #etcd
+  - job_name: etcd-server
+    scheme: https
+    tls_config:
+    # CA certificate to validate API server certificate with.
+    [ ca_file: /etc/prometheus/secret/etcd/etcd-client-ca.crt ]
+    
+    # Certificate and key files for client cert authentication to the server.
+    [ cert_file: /etc/prometheus/secret/etcd/etcd-client.crt ]
+    [ key_file: /etc/prometheus/secret/etcd/etcd-client.key ]
+   #   insecure_skip_verify: true
+    static_configs:
+    - targets: ['10.122.20.210:2379','10.122.20.212:2379','10.122.20.213:2379'] 
   #ceph
   - job_name: 'ceph-exporter'
 
     static_configs:
-    - targets: [‘10.122.20.214:9128']
+    - targets: ['10.122.20.214:9128']
       labels:
         alias: ceph-exporter
