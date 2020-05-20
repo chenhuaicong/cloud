@@ -1,4 +1,3 @@
-# these rules synced manually from https://github.com/etcd-io/etcd/blob/master/Documentation/etcd-mixin/mixin.libsonnet
 groups:
 - name: etcd
   rules:
@@ -161,11 +160,11 @@ groups:
       summary: CEPH in WARN
   - alert: OsdDown
     expr: ceph_osd_up == 0
-    for: 30m
+    for: 30s
     labels:
       severity: warning
     annotations:
-      description: OSD is down longer than 30 min, please check whats the status
+      description: OSD is down longer than 30 sec, please check whats the status
       summary: OSD down
   - alert: OsdApplyLatencyTooHigh
     expr: ceph_osd_perf_apply_latency_seconds > 10

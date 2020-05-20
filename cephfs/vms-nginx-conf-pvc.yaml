@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vms-nginx-conf
+  namespace: vms-dev
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+  volumeName: vms-nginx-conf
+  selector:
+    matchLabels:
+      pv: vms-nginx-conf
+  storageClassName: ''
