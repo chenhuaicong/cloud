@@ -19,7 +19,7 @@ cd /opt/ && wget http://soft.kyepm.com/prometheus/install_kafka_exporter.sh
 执行脚本，并带上kafka ip及端口
 bash install_kafka_exporter.sh
 示例：
-bash install_kafka_exporter.sh 10.121.39.1:9092 10.121.39.2:9092  10.121.39.3:9092
+bash install_kafka_exporter.sh 10.10.10.1:9092 10.10.10.2:9092  10.10.10.3:9092
 停止命令
 systemctl stop kafka_exporter
 启动命令
