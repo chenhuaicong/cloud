@@ -1,0 +1,27 @@
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+    - ldap:
+        attributes:
+          email:
+            - mail
+          id:
+            - sAMAccountName
+          name:
+            - cn
+          preferredUsername:
+            - uid
+        bindDN: 'CN=dockerservice,OU=Server Users,DC=ky-tech,DC=com,DC=cn'
+        bindPassword:
+          name: ldap-bind-password-6w54s
+        ca:
+          name: ldap-ca-tsjts
+        insecure: false
+        url: >-
+          ldaps://SZPBS-PWP-DC02.ky-tech.com.cn:636/DC=ky-tech,DC=com,DC=cn?sAMAccountName
+      mappingMethod: claim
+      name: ldap
+      type: LDAP
