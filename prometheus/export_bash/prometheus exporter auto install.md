@@ -15,7 +15,7 @@
  2、下载安装脚本及运行
 
 ```
-cd /opt/ && wget http://soft.kyepm.com/prometheus/install_kafka_exporter.sh
+cd /opt/ && wget http://soft.example.com/prometheus/install_kafka_exporter.sh
 执行脚本，并带上kafka ip及端口
 bash install_kafka_exporter.sh
 示例：
@@ -40,7 +40,7 @@ systemctl status kafka_exporter
 
 3、下载安装脚本及执行
 ```
-cd /opt/ && wget http://soft.kyepm.com/prometheus/install_rabbitmq_exporter.sh
+cd /opt/ && wget http://soft.example.com/prometheus/install_rabbitmq_exporter.sh
 执行脚本，并带上参数
 bash install_rabbitmq_exporter.sh
 示例
@@ -72,7 +72,7 @@ systemctl status rabbitmq_exporter
 
 2、下载脚本及运行
 ```
-cd /opt/ && wget http://soft.kyepm.com/prometheus/install_redis_exporter.sh
+cd /opt/ && wget http://soft.example.com/prometheus/install_redis_exporter.sh
 执行安装脚本
 bash install_redis_exporter.sh
 示例：

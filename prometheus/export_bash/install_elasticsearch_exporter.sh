@@ -1,32 +1,48 @@
 #!/usr/bin/env bash
-#当前版本 	v1.0.0-RC7
-#部署路径 	/usr/local/prometheus/rabbitmq_exporter
-#配置目录 	/usr/local/prometheus/rabbitmq_exporter
-#启停方式 	systemctl [start|stop|restart|status] rabbitmq_exporter
-#端口 	9419
+
+#当前版本 	1.2.0
+#部署路径 	/usr/local/prometheus/elasticsearch_exporter
+#配置目录 	/usr/local/prometheus/elasticsearch_exporter
+#启停方式 	systemctl [start|stop|restart|status] elasticsearch_exporter
+#端口 	9108
 #运行用户   app
-# https://github.com/kbudde/rabbitmq_exporter
-# scripts by lrx 2020/5/8 v1.0.0
+# https://github.com/justwatchcom/elasticsearch_exporter
+# scripts by lrx 2020/5/23 v1.0.0
 
 root_path='/usr/local/prometheus'
-install_path="${root_path}/rabbitmq_exporter"
+install_path="${root_path}/elasticsearch_exporter"
 
-name='rabbitmq_exporter'
+name='elasticsearch_exporter'
 exporter_type="${name%_exporter}"
-port='9419'
+port='9108'
 server_hostname=$(hostname)
 
 ShowUsage() {
-    echo "Usage: $0 rabbitMQ_management_plugin_url user password such as: $0 http://127.0.0.1:15672 admin rabbit_pass"
+    echo "Usage: $0 es_host:port such as: $0 127.0.0.1:9092"
     exit 1
 }
 
-if [[ $# -ne 3 ]]; then ShowUsage; fi
+if [[ $# -lt 1 ]]; then ShowUsage; fi
 
-rabbit_url=$1
-rabbit_user=$2
-rabbit_pass=$3
+# 构造启动配置参数
+es_server="${1}"
+es_server_url="http://${es_server}"
 
+# 询问ES是否需要认证
+read -r -p "ES是否有密码 yes/no?" answer
+if [[ ${answer} =~ ^y(es)?$ ]]; then
+    read -r -p "请输入ES帐号?" es_id
+    read -r -p "请输入ES密码?" es_pw
+    if [[ ! -n ${es_id} ]]; then
+        echo -e "\n没有输入ES帐号，程序退出，请重新运行安装脚本"
+        exit 1
+    fi
+    if [[ ! -n ${es_pw} ]]; then
+        echo -e "\n没有输入ES密码，程序退出，请重新运行安装脚本"
+        exit 1
+    fi
+    es_server_url="http://${es_id}:${es_pw}@${es_server}"
+fi
 
 if [[ ! -d ${root_path} ]]; then
     mkdir -p ${root_path}
@@ -35,95 +51,64 @@ fi
 if [[ -d ${install_path} ]]; then
     mv ${install_path} ${install_path}_bak_$(date '+%Y-%m-%d_%H_%M_%S')
 fi
-
 cd /opt/
-wget http://soft.example.com/prometheus/rabbitmq_exporter-1.0.0-RC7.linux-amd64.tar.gz
+wget http://soft.example.com/prometheus/elasticsearch_exporter-1.1.0.linux-amd64.tar.gz
 if [[ $? -ne 0 ]];then
     echo "download fail,please"
     exit 1
 fi
-
-tar zxf rabbitmq_exporter-1.0.0-RC7.linux-amd64.tar.gz
-mv rabbitmq_exporter-1.0.0-RC7.linux-amd64 ${install_path}
-rm rabbitmq_exporter-v1.6.0.linux-amd64.tar.gz -vf
+tar zxf elasticsearch_exporter-1.1.0.linux-amd64.tar.gz
+mv elasticsearch_exporter-1.1.0.linux-amd64 ${install_path}
+rm -vf elasticsearch_exporter-1.1.0.linux-amd64.tar.gz
 
 chown -R app.app ${install_path}
-chmod +x ${install_path}/rabbitmq_exporter
+chmod +x ${install_path}/elasticsearch_exporter
 
-
-cat >${install_path}/config.json<<eof
-{
-    "rabbit_url": "${rabbit_url}",
-    "rabbit_user": "${rabbit_user}",
-    "rabbit_pass": "${rabbit_pass}",
-    "publish_port": "9419",
-    "publish_addr": "",
-    "output_format": "TTY",
-    "ca_file": "ca.pem",
-    "cert_file": "client-cert.pem",
-    "key_file": "client-key.pem",
-    "insecure_skip_verify": false,
-    "exlude_metrics": [],
-    "include_queues": ".*",
-    "skip_queues": "^$",
-    "skip_vhost": "^$",
-    "include_vhost": ".*",
-    "rabbit_capabilities": "no_sort,bert",
-    "enabled_exporters": [
-            "exchange",
-            "node",
-            "overview",
-            "queue"
-    ],
-    "timeout": 30,
-    "max_queues": 0
-}
-eof
-
-
-cat >/usr/lib/systemd/system/rabbitmq_exporter.service<<eof
+cat >/usr/lib/systemd/system/elasticsearch_exporter.service<<eof
 [Unit]
-Description=rabbitmq_exporter
-Documentation=https://github.com/kbudde/rabbitmq_exporter
+Description=elasticsearch_exporter
+Documentation=https://github.com/justwatchcom/elasticsearch_exporter
 After=network.target
 
 [Service]
 Type=simple
 User=app
-ExecStart=${install_path}/rabbitmq_exporter -config-file ${install_path}/config.json
+ExecStart=${install_path}/elasticsearch_exporter --web.listen-address=0.0.0.0:9108 --es.uri=${es_server_url}
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 eof
 
 systemctl daemon-reload
-systemctl enable rabbitmq_exporter
-systemctl start rabbitmq_exporter
+systemctl enable elasticsearch_exporter
+systemctl restart elasticsearch_exporter
 sleep 1
-systemctl status rabbitmq_exporter
+systemctl status elasticsearch_exporter
+
 if [[ $? -eq 0 ]];then
-    echo "rabbitmq_exporter Successful installation"
+    echo "elasticsearch_exporter Successful installation"
 else
-    echo "rabbitmq_exporter Installation failed, please check"
+    echo "elasticsearch_exporter Installation failed, please check"
 fi
+
+#rm -fv install_kafka_exporter.sh
+
 
 # step 2 配置prometheus
 
-#  - job_name: rabbitmq_exporter
+#  - job_name: kafka_exporter
 #    metrics_path: /metrics
 #    scheme: http
 #    static_configs:
-#    - targets: ['10.121.39.1:9419']
+#    - targets: ['10.121.39.1:9308']
 #      labels:
-#        instance: zddd_str_rabbitmq
-
+#      instance: kafka_str
 
 # step 3 导入 json 面板到 grafana
 
-# 下载地址：https://grafana.com/grafana/dashboards/4371
-#修改好的 http://soft.example.com/prometheus/RabbitMQ_Metrics-20200508.json
+# 下载地址：https://grafana.com/grafana/dashboards/7589
 
-
+# kafka-exporter-overview_rev5.json
 
 
 get_local_ip() {
@@ -244,7 +229,7 @@ cat >/tmp/register.json<<eof
 eof
 
 curl -X PUT -d @/tmp/register.json \
-"http://consul.example.com/v1/agent/service/register?replace-existing-checks=1"
+"http://consul.example.com.cn/v1/agent/service/register?replace-existing-checks=1"
 
 }
 

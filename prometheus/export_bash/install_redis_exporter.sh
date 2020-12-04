@@ -1,31 +1,36 @@
 #!/usr/bin/env bash
-#当前版本 	v1.0.0-RC7
-#部署路径 	/usr/local/prometheus/rabbitmq_exporter
-#配置目录 	/usr/local/prometheus/rabbitmq_exporter
-#启停方式 	systemctl [start|stop|restart|status] rabbitmq_exporter
-#端口 	9419
+#当前版本 	1.6.0
+#部署路径 	/usr/local/prometheus/redis_exporter
+#配置目录 	/usr/local/prometheus/redis_exporter
+#启停方式 	systemctl [start|stop|restart|status] redis_exporter
+#端口 	9121
 #运行用户   app
-# https://github.com/kbudde/rabbitmq_exporter
+# https://github.com/oliver006/redis_exporter
 # scripts by lrx 2020/5/8 v1.0.0
 
 root_path='/usr/local/prometheus'
-install_path="${root_path}/rabbitmq_exporter"
+install_path="${root_path}/redis_exporter"
 
-name='rabbitmq_exporter'
+name='redis_exporter'
 exporter_type="${name%_exporter}"
-port='9419'
+port='9121'
 server_hostname=$(hostname)
 
+
 ShowUsage() {
-    echo "Usage: $0 rabbitMQ_management_plugin_url user password such as: $0 http://127.0.0.1:15672 admin rabbit_pass"
+    echo "Usage: $0 redis_host:port such as: $0 127.0.0.1:6379"
     exit 1
 }
 
-if [[ $# -ne 3 ]]; then ShowUsage; fi
+if [[ $# -ne 1 ]]; then ShowUsage; fi
+redis_host=$1
 
-rabbit_url=$1
-rabbit_user=$2
-rabbit_pass=$3
+# 输入获得redis密码
+read -r -s -p "input redis password:" redis_pw
+if [[ ! -n ${redis_pw} ]]; then
+    echo -e "\nyou have not input password! exit"
+    exit 1
+fi
 
 
 if [[ ! -d ${root_path} ]]; then
@@ -37,94 +42,81 @@ if [[ -d ${install_path} ]]; then
 fi
 
 cd /opt/
-wget http://soft.example.com/prometheus/rabbitmq_exporter-1.0.0-RC7.linux-amd64.tar.gz
+wget http://soft.example.com/prometheus/redis_exporter-v1.6.0.linux-amd64.tar.gz
 if [[ $? -ne 0 ]];then
     echo "download fail,please"
     exit 1
 fi
 
-tar zxf rabbitmq_exporter-1.0.0-RC7.linux-amd64.tar.gz
-mv rabbitmq_exporter-1.0.0-RC7.linux-amd64 ${install_path}
-rm rabbitmq_exporter-v1.6.0.linux-amd64.tar.gz -vf
+tar zxf redis_exporter-v1.6.0.linux-amd64.tar.gz
+mv redis_exporter-v1.6.0.linux-amd64 ${install_path}
+#rm redis_exporter-v1.6.0.linux-amd64.tar.gz -vf
 
 chown -R app.app ${install_path}
-chmod +x ${install_path}/rabbitmq_exporter
+chmod +x ${install_path}/redis_exporter
 
-
-cat >${install_path}/config.json<<eof
-{
-    "rabbit_url": "${rabbit_url}",
-    "rabbit_user": "${rabbit_user}",
-    "rabbit_pass": "${rabbit_pass}",
-    "publish_port": "9419",
-    "publish_addr": "",
-    "output_format": "TTY",
-    "ca_file": "ca.pem",
-    "cert_file": "client-cert.pem",
-    "key_file": "client-key.pem",
-    "insecure_skip_verify": false,
-    "exlude_metrics": [],
-    "include_queues": ".*",
-    "skip_queues": "^$",
-    "skip_vhost": "^$",
-    "include_vhost": ".*",
-    "rabbit_capabilities": "no_sort,bert",
-    "enabled_exporters": [
-            "exchange",
-            "node",
-            "overview",
-            "queue"
-    ],
-    "timeout": 30,
-    "max_queues": 0
-}
-eof
-
-
-cat >/usr/lib/systemd/system/rabbitmq_exporter.service<<eof
+cat >/usr/lib/systemd/system/redis_exporter.service<<eof
 [Unit]
-Description=rabbitmq_exporter
-Documentation=https://github.com/kbudde/rabbitmq_exporter
+Description=redis_exporter
+Documentation=https://github.com/oliver006/redis_exporter
 After=network.target
 
 [Service]
 Type=simple
 User=app
-ExecStart=${install_path}/rabbitmq_exporter -config-file ${install_path}/config.json
+ExecStart=${install_path}/redis_exporter -redis.addr ${redis_host}  -redis.password ${redis_pw}
 Restart=on-failure
 [Install]
 WantedBy=multi-user.target
 eof
 
 systemctl daemon-reload
-systemctl enable rabbitmq_exporter
-systemctl start rabbitmq_exporter
+systemctl enable redis_exporter
+systemctl start redis_exporter
 sleep 1
-systemctl status rabbitmq_exporter
+systemctl status redis_exporter
 if [[ $? -eq 0 ]];then
-    echo "rabbitmq_exporter Successful installation"
+    echo "redis_exporter Successful installation"
 else
-    echo "rabbitmq_exporter Installation failed, please check"
+    echo "redis_exporter Installation failed, please check"
 fi
 
 # step 2 配置prometheus
 
-#  - job_name: rabbitmq_exporter
-#    metrics_path: /metrics
-#    scheme: http
+#scrape_configs:
+#  - job_name: redis_exporter
 #    static_configs:
-#    - targets: ['10.121.39.1:9419']
-#      labels:
-#        instance: zddd_str_rabbitmq
+#    - targets: ['<<REDIS-EXPORTER-HOSTNAME>>:9121']
 
-
-# step 3 导入 json 面板到 grafana
-
-# 下载地址：https://grafana.com/grafana/dashboards/4371
-#修改好的 http://soft.example.com/prometheus/RabbitMQ_Metrics-20200508.json
-
-
-
+#在安装有exporter的节点上执行执行
+#
+#curl -X PUT -d '{"id": "xxx-prometheus-prd-cluster01-10.120.35.60-node","name": "node-exporter","address": "10.120.35.60","port": 9100,"meta":{"environment":"produce","project":"monitor","service":"node","user":"工号,工号"},"checks": [{"http": "http://10.120.35.60:9100/metrics", "interval": "5s"}]}'  http://consul.example.com.cn/v1/agent/service/register
+#
+#数据结构解释：
+#
+#注意所有横线使用中划线，不使用下划线；
+#
+#id：用主机名+ip+类型；
+#
+#name：是exporter类型，值包括redis-exporter/rabbitmq-exporter/kafka-exporter/haproxy-exporter;
+#
+#address：是exporter所在主机的ip;
+#
+#port：是exporter的端口;
+#
+#meta：{"environment":"环境","project":"模块名字","service":"所监控服务类型","user":"工号，工号"}
+#
+#environment：值分别有produce/dev/test/pressure/uat；
+#
+#project：值是vms/ims/oa/oem等的模块名字；
+#
+#service：值是redis/rabbitmq/kafka/haproxy等；
+#
+#user：是维护人的工号，多个写在一个字符串里用英文逗号隔开，用来发告警的；
+#
+#checks：是exporter暴漏的metrics地址；
+#
+# http://consul.example.com.cn/v1/agent/service/register   ：是consul的api注册接口；
 
 get_local_ip() {
     #获取本地ip地址
@@ -196,6 +188,7 @@ get_project() {
     # echo "project：值是vms/ims/oa/oem等的模块名字"
     hostname_project=$(echo ${server_hostname} | awk -F"-" '{print $2}')
     echo "请确认项目为是否为:${hostname_project} Y/N?"
+
     read -r -p "请确认项目为是否为:${hostname_project} yes/no?" answer
     if [[ ${answer} =~ ^y(es)?$ ]]; then
         hostname_project=${hostname_project}
@@ -244,7 +237,7 @@ cat >/tmp/register.json<<eof
 eof
 
 curl -X PUT -d @/tmp/register.json \
-"http://consul.example.com/v1/agent/service/register?replace-existing-checks=1"
+"http://consul.example.com.cn/v1/agent/service/register?replace-existing-checks=1"
 
 }
 
