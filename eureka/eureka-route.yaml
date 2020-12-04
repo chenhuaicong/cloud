@@ -5,7 +5,7 @@ metadata:
     run: eureka
   name: eureka
 spec:
-  host: example2.regionone.ky-tech.com.cn
+  host: example2.regionone.example.com
   port:
     targetPort: tcp
   to:

@@ -12,19 +12,19 @@ fi
 
 
 update_version=`oc  rollout history deploymentconfig ${app_name} -n ${namespace}|grep -v  ^$|awk 'END  {print $1}'`
-echo  "${app_name}版本更新成功，请等待程序启动，可跳转至容器云平台(https://docker-dev.ky-tech.com.cn/console/project/${namespace}/browse/rc/${app_name}-${update_version}?tab=details)查看启动情况"
+echo  "${app_name}版本更新成功，请等待程序启动，可跳转至容器云平台(https://docker-dev.example.com/console/project/${namespace}/browse/rc/${app_name}-${update_version}?tab=details)查看启动情况"
 echo -n "程序启动中. "
 while true
 do
     let num++
     if [ ${num} -gt 250 ];then
-	echo "发布超时,请检查..或者到容器云平台查看详情;https://docker-dev.ky-tech.com.cn/console/project/${namespace}/browse/rc/${app_name}-${update_version}?tab=details"
+	echo "发布超时,请检查..或者到容器云平台查看详情;https://docker-dev.example.com/console/project/${namespace}/browse/rc/${app_name}-${update_version}?tab=details"
 	exit 1
     fi
 
     oc  get pod -l run=${app_name} -n ${namespace} |grep ImagePullBackOff  >> /dev/null 2>&1  && let imagepullfail++
     if [ ${imagepullfail} -gt 10 ];then
-        echo "${app_name} 镜像拉取失败, 请检测${app_name}是否在联调环境构建,或者到容器云平台查看详情;https://docker-dev.ky-tech.com.cn/console/project/${namespace}/browse/rc/${app_name}-${update_version}?tab=details"
+        echo "${app_name} 镜像拉取失败, 请检测${app_name}是否在联调环境构建,或者到容器云平台查看详情;https://docker-dev.example.com/console/project/${namespace}/browse/rc/${app_name}-${update_version}?tab=details"
         exit 1
     fi   
  

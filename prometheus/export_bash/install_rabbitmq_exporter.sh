@@ -244,7 +244,7 @@ cat >/tmp/register.json<<eof
 eof
 
 curl -X PUT -d @/tmp/register.json \
-"http://consul.ky-tech.com.cn/v1/agent/service/register?replace-existing-checks=1"
+"http://consul.example.com/v1/agent/service/register?replace-existing-checks=1"
 
 }
 

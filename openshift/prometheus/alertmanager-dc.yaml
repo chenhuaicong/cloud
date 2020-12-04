@@ -32,7 +32,7 @@ spec:
         run: alertmanager
     spec:
       containers:
-      - image: registry-dev.ky-tech.com.cn/cephfs/alertmanager:v0.20.0
+      - image: registry-dev.example.com/cephfs/alertmanager:v0.20.0
         imagePullPolicy: IfNotPresent
         name: alertmanager
         resources: {}

@@ -1,4 +1,4 @@
-FROM registry-dev.ky-tech.com.cn/base/centos:7.6-1810
+FROM registry-dev.example.com/base/centos:7.6-1810
 
 
 # 维护者信息

@@ -21,7 +21,7 @@ spec:
           name: ldap-ca-tsjts
         insecure: false
         url: >-
-          ldaps://SZPBS-PWP-DC02.ky-tech.com.cn:636/DC=ky-tech,DC=com,DC=cn?sAMAccountName
+          ldaps://xxx-PWP-DC02.example.com:636/DC=ky-tech,DC=com,DC=cn?sAMAccountName
       mappingMethod: claim
       name: ldap
       type: LDAP

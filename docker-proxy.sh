@@ -3,7 +3,7 @@
 # you should set it to your proxy ip 
 proxy_ip="http://10.122.33.200:80"
 # you need set it to the  host ip 
-proxy_none_ip="172.16.0.0/12,192.168.0.0/16,mirrors-pbs1.ky-tech.com.cn,mirrors-pbs2.ky-tech.com.cn"   
+proxy_none_ip="172.16.0.0/12,192.168.0.0/16,mirrors-pbs1.example.com,mirrors-pbs2.example.com"   
 
 proxy='Environment="HTTPS_PROXY='${proxy_ip}'"\
 Environment="NO_PROXY=127.0.0.0/8"\

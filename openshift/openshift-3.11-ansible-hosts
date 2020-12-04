@@ -18,7 +18,7 @@ openshift_master_console_port=443
 
 #Configuring Cluster Metrics
 openshift_metrics_install_metrics=true
-openshift_metrics_hawkular_hostname=metrics-docker-dev.ky-tech.com.cn
+openshift_metrics_hawkular_hostname=metrics-docker-dev.example.com
 #openshift_metrics_cassandra_storage_type=pv
 #openshift_metrics_cassandra_pvc_storage_class_name=openshift-rbd
 #openshift_metrics_storage_access_modes=['ReadWriteOnce']
@@ -66,7 +66,7 @@ openshift_cluster_monitoring_operator_alertmanager_storage_capacity=50Gi
 
 # uncomment the following to enable htpasswd authentication; defaults to AllowAllPasswordIdentityProvider
 #openshift_master_identity_providers=[{'name': 'htpasswd_auth', 'login': 'true', 'challenge': 'true', 'kind': 'HTPasswdPasswordIdentityProvider'}]
-openshift_master_identity_providers=[{'name': 'my_ldap_provider', 'challenge': 'true', 'login': 'true', 'kind': 'LDAPPasswordIdentityProvider', 'attributes': {'id': ['sAMAccountName'], 'email': ['mail'], 'name': ['cn'], 'preferredUsername': ['uid']}, 'bindDN': 'CN=dockerservice,OU=Server Users,DC=ky-tech,DC=com,DC=cn', 'bindPassword': 'PXxeDhuUPkp4RbrV', 'insecure': 'false', 'ca':'/root/ky-ca.crt', 'url': 'ldaps://SZPBS-PWP-DC02.ky-tech.com.cn:636/DC=ky-tech,DC=com,DC=cn?sAMAccountName'}]
+openshift_master_identity_providers=[{'name': 'my_ldap_provider', 'challenge': 'true', 'login': 'true', 'kind': 'LDAPPasswordIdentityProvider', 'attributes': {'id': ['sAMAccountName'], 'email': ['mail'], 'name': ['cn'], 'preferredUsername': ['uid']}, 'bindDN': 'CN=dockerservice,OU=Server Users,DC=ky-tech,DC=com,DC=cn', 'bindPassword': 'PXxeDhuUPkp4RbrV', 'insecure': 'false', 'ca':'/root/ky-ca.crt', 'url': 'ldaps://xxx-PWP-DC02.example.com:636/DC=ky-tech,DC=com,DC=cn?sAMAccountName'}]
 openshift_disable_check=memory_availability,disk_availability,docker_image_availability,docker_storage
 
 # 使用多租户网络
@@ -79,11 +79,11 @@ os_sdn_network_plugin_name=redhat/openshift-ovs-multitenant
 # or to one or all of the masters defined in the inventory if no load
 # balancer is present.
 openshift_master_cluster_method=native
-openshift_master_cluster_hostname=in-docker-dev.ky-tech.com.cn
-openshift_master_cluster_public_hostname=docker-dev.ky-tech.com.cn
-openshift_master_default_subdomain=ky-tech.com.cn
+openshift_master_cluster_hostname=in-docker-dev.example.com
+openshift_master_cluster_public_hostname=docker-dev.example.com
+openshift_master_default_subdomain=example.com
 openshift_master_overwrite_named_certificates=true
-openshift_master_named_certificates=[{"certfile": "/root/cert/ky-tech.com.cn_bundle.crt", "keyfile": "/root/cert/ky-tech.com.cn.key", "names": ["docker-dev.ky-tech.com.cn"]}]
+openshift_master_named_certificates=[{"certfile": "/root/cert/example.com_bundle.crt", "keyfile": "/root/cert/example.com.key", "names": ["docker-dev.example.com"]}]
 
 # apply updated node defaults
 #openshift_node_groups=[{'name': 'node-config-master', 'labels': ['node-role.kubernetes.io/master=true']}, {'name': 'node-config-infra', 'labels': ['node-role.kubernetes.io/infra=true']}, {'name': 'node-config-compute', 'labels': ['node-role.kubernetes.io/compute=true'], 'edits': [{ 'key': 'kubeletArguments.eviction-pressure-transition-period','value': ['2m']},{ 'key': 'kubeletArguments.pods-per-core','value': ['128']},{ 'key': 'kubeletArguments.max-pods','value': ['250']},{ 'key': 'kubeletArguments.eviction-hard','value': ['memory.available<100Mi']]}]
@@ -92,14 +92,14 @@ openshift_node_groups=[{'name': 'node-config-master', 'labels': ['node-role.kube
 openshift_is_atomic=false
 ansible_distribution=centos
 
-openshift_docker_options=" --log-driver=json-file --insecure-registry 172.30.0.0/16 --insecure-registry registry-dev.ky-tech.com.cn --log-opt max-size=10M --log-opt max-file=3 "
+openshift_docker_options=" --log-driver=json-file --insecure-registry 172.30.0.0/16 --insecure-registry registry-dev.example.com --log-opt max-size=10M --log-opt max-file=3 "
 
 #配置router 默认证书
-openshift_hosted_router_certificate={"certfile": "/root/cert/ky-tech.com.cn_bundle.crt", "keyfile": "/root/cert/ky-tech.com.cn.key", "cafile": "/root/cert/root_bundle.crt"}
+openshift_hosted_router_certificate={"certfile": "/root/cert/example.com_bundle.crt", "keyfile": "/root/cert/example.com.key", "cafile": "/root/cert/root_bundle.crt"}
 #Registry Route Variables
-openshift_hosted_registry_routehost=register-dev.ky-tech.com.cn
+openshift_hosted_registry_routehost=register-dev.example.com
 openshift_hosted_registry_routetermination=reencrypt
-openshift_hosted_registry_routecertificates={"certfile": "/root/cert/ky-tech.com.cn_bundle.crt", "keyfile": "/root/cert/ky-tech.com.cn.key", "cafile": "/root/cert/root_bundle.crt"}
+openshift_hosted_registry_routecertificates={"certfile": "/root/cert/example.com_bundle.crt", "keyfile": "/root/cert/example.com.key", "cafile": "/root/cert/root_bundle.crt"}
 
 # 配置会话
 openshift_master_session_name = ssn 
@@ -107,28 +107,28 @@ openshift_master_session_max_seconds = 3600
 
 # host group for masters
 [masters]
-szpbs-okd-prd-master1
-szpbs-okd-prd-master2
-szpbs-okd-prd-master3
+xxx-okd-prd-master1
+xxx-okd-prd-master2
+xxx-okd-prd-master3
 
 # host group for etcd
 [etcd]
-szpbs-okd-prd-master1
-szpbs-okd-prd-master2
-szpbs-okd-prd-master3
+xxx-okd-prd-master1
+xxx-okd-prd-master2
+xxx-okd-prd-master3
 
 # Specify load balancer host
 #[lb]
-#szpbs-okd-prd-node2
+#xxx-okd-prd-node2
 
 # host group for nodes, includes region info
 [nodes]
-szpbs-okd-prd-master[1:3] openshift_node_group_name='node-config-master'
-szpbs-okd-prd-node[1:5] openshift_node_group_name='node-config-compute'
-szpbs-okd-prd-node[8:10] openshift_node_group_name='node-config-compute'
-szpbs-okd-prd-infra-node2 openshift_node_group_name='node-config-infra'
-szpbs-okd-prd-infra-node1 openshift_node_group_name='node-config-infra'
+xxx-okd-prd-master[1:3] openshift_node_group_name='node-config-master'
+xxx-okd-prd-node[1:5] openshift_node_group_name='node-config-compute'
+xxx-okd-prd-node[8:10] openshift_node_group_name='node-config-compute'
+xxx-okd-prd-infra-node2 openshift_node_group_name='node-config-infra'
+xxx-okd-prd-infra-node1 openshift_node_group_name='node-config-infra'
 
 [new_nodes]
-szpbs-okd-prd-node6 openshift_node_group_name='node-config-compute'
-szpbs-okd-prd-node7 openshift_node_group_name='node-config-compute'
+xxx-okd-prd-node6 openshift_node_group_name='node-config-compute'
+xxx-okd-prd-node7 openshift_node_group_name='node-config-compute'

@@ -22,7 +22,7 @@ spec:
           - name: "LOGGING_OUTPUT"
             value: "elasticsearch"
           - name: "ELASTICSEARCH_HOSTS"
-            value: "http://elasticsearch.regionone.ky-tech.com.cn"
+            value: "http://elasticsearch.regionone.example.com"
           - name: "NODE_NAME"
             valueFrom:
               fieldRef:

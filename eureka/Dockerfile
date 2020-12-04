@@ -1,6 +1,6 @@
-FROM registry.regionone.ky-tech.com.cn/base/centosjdkyum
+FROM registry.regionone.example.com/base/centosjdkyum
 
-MAINTAINER chenhuaicong <chenhuaiocng@ky-tech.com.cn>
+MAINTAINER chenhuaicong <chenhuaiocng@example.com>
 
 ADD eureka.jar /app/erp/
 

@@ -9,9 +9,9 @@ spec:
     - ReadWriteMany
   cephfs:
     monitors:
-      - szpbs-okd-prd-cephfs1:6789
-      - szpbs-okd-prd-cephfs2:6789
-      - szpbs-okd-prd-cephfs3:6789
+      - xxx-okd-prd-cephfs1:6789
+      - xxx-okd-prd-cephfs2:6789
+      - xxx-okd-prd-cephfs3:6789
     user: admin
     path: /cephfs/openshift-dev/vms-dev/vms-nginx/data
     secretRef:

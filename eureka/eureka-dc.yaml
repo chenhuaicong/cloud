@@ -23,7 +23,7 @@ spec:
         env:
         - name: TZ
           value: Asia/Shanghai
-        image: registry.regionone.ky-tech.com.cn/eureka/eureka:v1
+        image: registry.regionone.example.com/eureka/eureka:v1
         imagePullPolicy: Always
         name: eureka
         ports:

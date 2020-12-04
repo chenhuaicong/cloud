@@ -35,7 +35,7 @@ spec:
       - env:
         - name: GF_SECURITY_ADMIN_PASSWORD
           value: passw0rd
-        image: registry-dev.ky-tech.com.cn/cephfs/grafana
+        image: registry-dev.example.com/cephfs/grafana
         imagePullPolicy: Always
         name: grafana
         resources: {}
