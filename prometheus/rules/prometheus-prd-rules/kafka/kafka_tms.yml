@@ -1,0 +1,31 @@
+groups:
+    - name: TMSkafka
+      rules:
+      - alert: TMS kafka 消费者组topic堆积数超过1万条
+        expr: sum(kafka_consumergroup_lag{id="gztxy-erp-prd-tms-kafka001-10.124.5.218-kafka",topic!~"erp_follow-tms_pre_delivery_data|erp_follow-inner_pre_delivery_data"}) by (consumergroup,topic,environment,project,instance,id,service,user) > 10000
+        for: 5m
+        labels:
+          severity: 一般告警
+        annotations:
+          message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 消费组 {{$labels.consumergroup}} topic {{$labels.topic}} 堆积数超过1万条\n当前值：{{humanize $value}}\n"
+      - alert: TMS kafka pre_delivery_data topic消费者组堆积数超过15万条
+        expr: sum(kafka_consumergroup_lag{id="gztxy-erp-prd-tms-kafka001-10.124.5.218-kafka",topic=~".*_pre_delivery_data"}) by (consumergroup,topic,environment,project,instance,id,service,user) > 150000
+        for: 5m
+        labels:
+          severity: 一般告警
+        annotations:
+          message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 消费组 {{$labels.consumergroup}} topic {{$labels.topic}} 堆积数超过15万条\n当前值：{{humanize $value}}\n"
+      - alert: TMS kafka 每秒消息产生数超过5千条
+        expr: sum(rate(kafka_topic_partition_current_offset{id="gztxy-erp-prd-tms-kafka001-10.124.5.218-kafka", topic=~"$topic"}[1m])) by (topic,environment,project,instance,id,service,user) > 5000
+        for: 1m
+        labels:
+          severity: 一般告警
+        annotations:
+          message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} {{$labels.topic}} 每秒消息产生数超过5k条\n当前值：{{humanize $value}}\n"
+      - alert: TMS kafka 每秒消息产生数超过5百条
+        expr: sum(rate(kafka_topic_partition_current_offset{id="gztxy-erp-prd-tms-kafka001-10.124.5.218-kafka", topic!~"erp_follow-tms_pre_delivery_data|erp_follow-inner_pre_delivery_data"}[1m])) by (topic,environment,project,instance,id,service,user) > 500
+        for: 1m
+        labels:
+          severity: 一般告警
+        annotations:
+          message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} {{$labels.topic}} 每秒消息产生数超过500条\n当前值：{{humanize $value}}\n"

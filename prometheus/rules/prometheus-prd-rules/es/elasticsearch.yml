@@ -1,0 +1,391 @@
+#生产告警规则配置
+groups:
+- name: elasticsearch
+  rules:
+  - alert: ElasticsearchExporterUp
+    expr: up{environment=~"pro?d|uat|UAT",job="elasticsearch-exporter"} == 0
+    for: 1m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 监控客户端挂了或者集群无响应！！！\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthUp
+    expr: elasticsearch_cluster_health_up{environment=~"pro?d|uat|UAT",job="elasticsearch-exporter"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 获取集群监控数据失败\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchClusterRed
+    expr: elasticsearch_cluster_health_status{environment=~"pro?d|uat|UAT",color="red"} == 1
+    for: 3m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群健康状态为红色\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchClusterYellow
+    expr: elasticsearch_cluster_health_status{environment=~"pro?d|uat|UAT",color="yellow"} == 1
+    for: 5m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群健康状态为黄色\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchUnassignedShards
+    expr: elasticsearch_cluster_health_unassigned_shards{environment=~"pro?d|uat|UAT"} > 0
+    for: 5m
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群未分配的分片数量异常\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchBreakersTrippedCount
+    expr: rate(elasticsearch_breakers_tripped{environment=~"pro?d|uat|UAT"}[5m]) > 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }}  {{ $labels.host }} {{ $labels.breaker }} 周期5分钟内节点每秒熔断次数大于0\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchPoolOldUsageTooHigh
+    expr: (elasticsearch_jvm_memory_pool_used_bytes{environment=~"pro?d|uat|UAT",pool="old"} / elasticsearch_jvm_memory_pool_max_bytes{environment=~"pro?d|uat|UAT",pool="old"}) * 100 > 90
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 节点 JVM OLD 区内存使用率超过90%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHeapAverageUsageTooHigh
+    expr: avg by(id,project,environment,service,instance,user) ((elasticsearch_jvm_memory_used_bytes{environment=~"pro?d|uat|UAT",area="heap"}) / (elasticsearch_jvm_memory_max_bytes{environment=~"pro?d|uat|UAT",area="heap"})) * 100 > 90
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群节点平均 JVM heap 内存使用率超过90%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHeapMaxUsageTooHigh
+    expr: max by(id,project,environment,service,instance,user) ((elasticsearch_jvm_memory_used_bytes{environment=~"pro?d|uat|UAT",area="heap"}) / (elasticsearch_jvm_memory_max_bytes{environment=~"pro?d|uat|UAT",area="heap"})) * 100 > 90
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }}  {{ $labels.host }} 集群节点最大 JVM heap 内存使用率超过90%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchOldGCCount
+    expr: rate(elasticsearch_jvm_gc_collection_seconds_count{environment=~"pro?d|uat|UAT",gc="old"}[5m]) > 5
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期5分钟内节点每秒 Old GC 次数大于5\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchOldGCRunTime
+    expr: rate(elasticsearch_jvm_gc_collection_seconds_sum{environment=~"pro?d|uat|UAT",gc="old"}[5m]) > 1
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期5分钟内节点每秒 Old GC 耗时大于1s\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchQueryCount
+    expr: irate(elasticsearch_indices_search_query_total{environment=~"pro?d|uat|UAT",es_data_node="true",id!~".*bigdata.*"}[5m]) > 10000
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期5分钟内节点每秒查询次数高于10000\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchQueryCountBigdata
+    expr: irate(elasticsearch_indices_search_query_total{environment=~"pro?d|uat|UAT",es_data_node="true",project="bigdata"}[5m]) > 100000
+    for: 3m
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期5分钟内节点每秒查询次数高于100000\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchIndexingCount
+    expr: irate(elasticsearch_indices_indexing_index_total{environment=~"pro?d|uat|UAT",es_data_node="true",id!~".*bigdata.*|.*elk.*"}[5m])  > 10000
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期5分钟内节点每秒写入次数高于10000\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchIndexingCountBigdata
+    expr: irate(elasticsearch_indices_indexing_index_total{environment=~"pro?d|uat|UAT",es_data_node="true",project="bigdata"}[5m])  > 50000
+    for: 3m
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期5分钟内节点每秒写入次数高于50000\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchIndexingCountElk
+    expr: irate(elasticsearch_indices_indexing_index_total{environment=~"pro?d|uat|UAT",es_data_node="true",id=~".*elk.*"}[5m])  > 50000
+    for: 3m
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期5分钟内节点每秒写入次数高于50000\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchSearchRejected
+    expr: (irate((elasticsearch_thread_pool_rejected_count{environment=~"pro?d|uat|UAT",type="search",es_data_node="true"}[1m])) / irate((elasticsearch_thread_pool_completed_count{environment=~"pro?d|uat|UAT",type="search",es_data_node="true"}[1m]))) * 100 > 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期1分钟内节点每秒查询拒绝率大于0%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchWriteRejected
+    expr: (irate(elasticsearch_thread_pool_rejected_count{environment=~"pro?d|uat|UAT",type="write",es_data_node="true"}[1m]) / irate(elasticsearch_thread_pool_completed_count{environment=~"pro?d|uat|UAT",type="write",es_data_node="true"}[1m])) * 100 > 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期1分钟内节点每秒写入拒绝率大于0%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchIndexLatency
+    expr: (irate(elasticsearch_indices_indexing_index_time_seconds_total{environment=~"pro?d|uat|UAT",es_data_node="true"}[1m]) / irate(elasticsearch_indices_indexing_index_total{environment=~"pro?d|uat|UAT",es_data_node="true"}[1m])) * 1000 > 500
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期1分钟内节点每秒写入延迟大于500ms\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchSearchLatency
+    expr: (irate(elasticsearch_indices_search_query_time_seconds{environment=~"pro?d|uat|UAT",es_data_node="true",id!~".*elk.*"}[1m]) / irate(elasticsearch_indices_search_query_total{environment=~"pro?d|uat|UAT",es_data_node="true",id!~".*elk.*"}[1m])) * 1000 > 500
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 周期1分钟内节点每秒查询延迟大于500ms\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchProcessCpuUsageTooHigh
+    expr: elasticsearch_process_cpu_percent{environment=~"pro?d|uat|UAT"} > 95
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 节点进程 CPU 使用率超过95%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchOsCpuUsageTooHigh
+    expr: elasticsearch_os_cpu_percent{environment=~"pro?d|uat|UAT"} > 95
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 节点主机 CPU 使用率超过95%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchDiskUsageTooHigh
+    expr: (sum by(id,project,environment,service,instance,user) (elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project!~"elkzhyw|openapi"} - elasticsearch_filesystem_data_available_bytes{environment=~"pro?d|uat|UAT",project!~"elkzhyw|openapi"})) / sum by(id,project,environment,service,instance,user) (elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project!~"elkzhyw|openapi"}) * 100 > 82
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群总磁盘使用率超过82%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchDiskUsageTooHighElkzhyw
+    expr: (sum by(id,project,environment,service,instance,user) (elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project=~"elkzhyw|openapi"} - elasticsearch_filesystem_data_available_bytes{environment=~"pro?d|uat|UAT",project=~"elkzhyw|openapi"})) / sum by(id,project,environment,service,instance,user) (elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project=~"elkzhyw|openapi"}) * 100 > 85
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群总磁盘使用率超过85%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchDiskMaxUsageTooHigh
+    expr: max by(id,host,project,environment,service,instance,mount,user) ((elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project!~"elkzhyw|openapi|bigdata"} - elasticsearch_filesystem_data_available_bytes{environment=~"pro?d|uat|UAT",project!~"elkzhyw|openapi|bigdata"}) / elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project!~"elkzhyw|openapi|bigdata"}) * 100 > 82
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主
+机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }}  {{ $labels.host }} 节点最大磁盘使用率超过82%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchDiskMaxUsageTooHighBigdata
+    expr: max by(id,host,project,environment,service,instance,mount,user) ((elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project=~"bigdata"} - elasticsearch_filesystem_data_available_bytes{environment=~"pro?d|uat|UAT",project=~"bigdata"}) / elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project=~"bigdata"}) * 100 > 83
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主
+机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }}  {{ $labels.host }} 节点最大磁盘使用率超过83%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  ElasticsearchDiskMaxUsageTooHighElkzhyw
+    expr: max by(id,host,project,environment,service,instance,mount,user) ((elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project=~"elkzhyw|openapi"} - elasticsearch_filesystem_data_available_bytes{environment=~"pro?d|uat|UAT",project=~"elkzhyw|openapi"}) / elasticsearch_filesystem_data_size_bytes{environment=~"pro?d|uat|UAT",project=~"elkzhyw|openapi"}) * 100 > 85
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }}  {{ $labels.host }} 节点最大磁盘使用率超过85%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchTooManyFd
+    expr: elasticsearch_process_open_files_count{environment=~"pro?d|uat|UAT"} / elasticsearch_process_max_files_descriptors{environment=~"pro?d|uat|UAT"} * 100 > 70
+    for: 5s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} {{ $labels.host }} 节点打开文件描述符数量大于70%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodes
+    expr: delta(elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT"}[5m]) < 0
+    for: 5s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 在线节点数异常，请检查集群中在线节点数是否正常\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesCrm
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-erp-prd-crm-es01-10.124.105.2-elasticsearch"} < 23
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于17个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesFms
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="ztxy-erp-prd-fms-es001-10.124.106.2-elasticsearch"} < 11
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于11个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesBigdata
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szzb-bigdata-prd-es01-10.82.192.233-elasticsearch"} < 40
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于20个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesPublic
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-erp-prd-public-es-master01-10.124.105.101-elasticsearch"} < 8
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于8个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesFmk
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szpbs-erp-prd-fmk-es01-10.120.8.10-elasticsearch"} < 18
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于18个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesElk
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-erp-prd-elk-master001-10.124.104.101-elasticsearch"} < 28
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于28个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesFmsVoucher
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szzb-erp-prd-fms-voucher-center-master-es01-10.81.76.181-elasticsearch"} < 6
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于6个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesGd
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szzb-erp-prd-gd-es001-10.82.33.1-elasticsearch"} < 6
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于6个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesSyslog
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szpbs-erp-prd-syslog-es01-10.120.5.1-elasticsearch"} < 5
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于5个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesOpenapi
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szpbs-openapi-prd-es01-10.120.3.71-elasticsearch"} < 12
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于12个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesHeishi
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-erp-prd-es001-10.126.4.2-elasticsearch"} < 25
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于25个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesCas
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szpbs-cas-prd-es01-10.120.3.20-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesOem
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-oem-prd-es001-10.124.50.23-elasticsearch"} < 16
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于16个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesMcs
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-erp-prd-mcs-mcs01-10.124.3.231-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesTms
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-erp-prd-tms-message01-10.124.2.101-elasticsearch"} < 3 
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesVms
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-vms-prd-push01-10.124.20.90-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesKuasheng
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-kuasheng-prd-es01-10.124.6.41-elasticsearch"} < 8
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于8个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodeselkzhyw
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szpbs-elk-prd-es001-10.120.9.20-elasticsearch"} < 6
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于6个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodescoo
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-coo-prd-es003-10.124.46.52-elasticsearch"} < 6
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于6个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesec
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-ec-prd-es03-10.124.51.16-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesAuthLog
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-erp-prd-auth-log01-10.124.3.107-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesBjmapAddress
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-bjmap-prd-es-address01-10.124.33.31-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesBjmapCommon
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-bjmap-prd-es-client01-10.124.33.16-elasticsearch"} < 10
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于10个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesBjmapAggregation
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-bjmap-prd-es01-10.124.37.202-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesBjmapBigdata
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="gztxy-bjmap-prd-tracloud-provider01-10.124.30.221-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"
+  - alert: ElasticsearchHealthyNodesBjmapAddressSzzb
+    expr: elasticsearch_cluster_health_number_of_nodes{environment=~"pro?d|uat|UAT",id="szzb-bjmap-prd-search-es01-10.82.4.21-elasticsearch"} < 3
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{$labels.project}}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Elasticsearch {{ $labels.id }} 集群在线节点数少于3个\n当前值：{{$value}}\n联系人：{{ $labels.user }}\n"

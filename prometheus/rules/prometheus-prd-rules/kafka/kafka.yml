@@ -1,0 +1,87 @@
+groups:
+- name: kafka
+  rules:
+  - alert: KafkaExporterUp
+    expr: up{environment=~"pro?d|uat|UAT", service="kafka"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：{{ $labels.service }} 监控客户端挂了或者监控采集超时\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaHealthyNodes
+    expr: delta(kafka_brokers{environment=~"pro?d|uat|UAT"}[5m]) < 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 在线节点数异常，请检查集群中在线节点数是否正常\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  #- alert: KafkaConsumerGroupLag
+  #  expr: sum(kafka_consumergroup_lag{environment=~"pro?d|uat|UAT",id!~".*elk.*"}) by (consumergroup,topic,environment,project,instance,id,service,user) > 150000
+  #  for: 30s
+  #  labels:
+  #    severity: "严重告警"
+  #  annotations:
+  #    message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 消费组 {{$labels.consumergroup}} topic {{$labels.topic}} 堆积数超过15万条\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaTopicOffsetRate
+    expr: sum(rate(kafka_topic_partition_current_offset{environment=~"pro?d|uat|UAT",id!~".*elk.*"}[1m])) by (topic,environment,project,instance,id,service,user) > 7000
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} topic {{$labels.topic}} 每秒消息产生数超过7000条\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaJmxExporterUp
+    expr: up{ environment=~"pro?d|uat|UAT",job="kafka-jmx"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka Jmx {{ $labels.id }} 监控客户端挂了\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaTooManyFd
+    expr: kafka_operatingsystem_openfiledescriptorcount{environment=~"pro?d|uat|UAT"} / kafka_operatingsystem_maxfiledescriptorcount{environment=~"pro?d|uat|UAT"} * 100 > 70
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 节点打开文件描述符数量大于70%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  KafkaOldGCCount
+    expr: rate(kafka_old_gc_collectioncount{environment=~"pro?d|uat|UAT"}[5m]) > 5
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 周期5分钟内每秒 Old GC 次数大于5\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert:  KafkaOldGCRunTime
+    expr: rate(kafka_old_gc_collectiontime{environment=~"pro?d|uat|UAT"}[5m]) > 1000
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 周期5分钟内每秒 Old GC 耗时大于1s\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaThreadTooMany
+    expr: kafka_threading_threadcount{environment=~"pro?d|uat|UAT"} > 150
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 活跃线程数大于150\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaOfflinePartitionsCount
+    expr: kafka_controller_kafkacontroller_offlinepartitionscount{environment=~"pro?d|uat|UAT"} > 1
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 没有Leader的分区数大于1\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaUnkownParttion
+    expr: rate(kafka_network_requestmetrics_errors_total{environment=~"pro?d|uat|UAT",request="Fetch, error=UNKNOWN_TOPIC_OR_PARTITION"}[5m]) > 10
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 每秒unkown_parttion错误量大于10\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: KafkaRebalance
+    expr: rate(kafka_network_requestmetrics_errors_total{environment=~"pro?d|uat|UAT",request="Heartbeat, error=REBALANCE_IN_PROGRESS"}[5m]) > 10
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Kafka {{ $labels.id }} 消费者整体重平衡每秒syncgroup错误量大于10\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"

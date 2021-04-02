@@ -1,0 +1,19 @@
+groups:
+    - name: rabbitmq_cannels-监控告警
+      rules:
+      - alert: rabbitmq_cannels数超过6k
+        expr: rabbitmq_channels{cluster="rabbit@gztxy-erp-prd-tms-mq01", environment="prod", id="gztxy-erp-prd-tms-mq02-10.124.5.171-rabbitmq", instance="10.124.5.171:9419", job="rabbitmq", project="erp-tms", service="rabbitmq", user="126801"} > 6000
+        for: 1m
+        labels:
+          status: 一般告警
+        annotations:
+          summary: "{{$labels.id}} Channels数超过6k！"
+          description: "{{$labels.id }} cannels数超过6k (目前:{{$value}})"
+      - alert: Rabbitmq队列消息堆积数超过500
+        expr: rabbitmq_queue_messages_ready{cluster="rabbit@gztxy-erp-prd-tms-mq01", durable="true", environment="prod", id="gztxy-erp-prd-tms-mq01-10.124.5.171-rabbitmq", instance=~".*", job="rabbitmq", policy="ha-all", project="erp-tms", queue=~".*", self="0", service="rabbitmq", vhost=~".*"} > 500
+        for: 1m 
+        labels:
+          severity: "warning"
+        annotations:
+          summary: "{{ $labels.queue }} 队列数超过500"
+          description: "{{ $labels.queue }} 队列数超过500 (目前 {{ $value }}"

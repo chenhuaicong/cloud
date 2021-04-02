@@ -1,0 +1,177 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: fluentd-es-config
+  namespace: logging
+  labels:
+    addonmanager.kubernetes.io/mode: Reconcile
+data:
+  # 系统配置，默认即可
+  system.conf: |-
+    <system>
+      root_dir /tmp/fluentd-buffers/
+    </system>
+
+  # 容器日志—收集配置
+  containers.input.conf: |-
+    # 配置数据源为 tail 模式，不断获取 docker 容器的日志，并标记为 raw.kubernetes.*
+    <source>
+      @id fluentd-containers.log
+      @type tail                                #Fluentd 内置的输入方式，表示不停地从源文件中获取新的日志。https://docs.fluentd.org/input/tail
+      path /var/log/containers/*.log            #Docker容器日志地址
+      pos_file /var/log/es-containers.log.pos   #存储最近读取日志的位置，https://docs.fluentd.org/input/tail#pos_file-highly-recommended
+      tag raw.kubernetes.*                      #设置日志标签
+      read_from_head true                       #从头读取日志文件 https://docs.fluentd.org/input/tail#read_from_head
+      <parse>                                   #多行格式化成JSON
+        @type multi_format                      #使用multi-format-parser解析器插件
+        <pattern>
+          format json                           #JSON解析器
+          time_key time                         #指定事件时间的时间字段
+          time_format %Y-%m-%dT%H:%M:%S.%NZ     #时间格式
+        </pattern>
+        <pattern>
+          format /^(?<time>.+) (?<stream>stdout|stderr) [^ ]* (?<log>.*)$/
+          time_format %Y-%m-%dT%H:%M:%S.%N%:z
+        </pattern>
+      </parse>
+    </source> 
+    # 匹配到 raw.kubernetes.* 时，检测异常，并将其作为一条日志转发 https://github.com/GoogleCloudPlatform/fluent-plugin-detect-exceptions
+    <match raw.kubernetes.**>                   # 匹配tag为 raw.kubernetes.* 的日志信息
+      @id raw.kubernetes
+      @type detect_exceptions                   # 使用detect-exceptions插件处理异常栈信息
+      remove_tag_prefix raw                     # 移除 raw 前缀
+      message log
+      stream stream
+      multiline_flush_interval 5
+      max_bytes 500000
+      max_lines 1000
+    </match>
+    # 拼接多行日志
+    <filter **>
+      @id filter_concat                         #Fluentd Filter插件，用于连接多个事件中分隔的多行日志。
+      @type concat
+      key message
+      multiline_end_regexp /\n$/
+      separator ""
+    </filter>
+    # 日志中加入 Kubernetes metadata https://github.com/fabric8io/fluent-plugin-kubernetes_metadata_filter
+    <filter kubernetes.**>
+      @id filter_kubernetes_metadata
+      @type kubernetes_metadata
+    </filter>
+    # 修复 ElasticSearch 中的 JSON 字段 https://github.com/repeatedly/fluent-plugin-multi-format-parser
+    <filter kubernetes.**>
+      @id filter_parser
+      @type parser                              #multi-format-parser多格式解析器插件
+      key_name log                              #在要解析的记录中指定字段名称
+      reserve_data true                         #在解析结果中保留原始键值对
+      remove_key_name_field true                #key_name解析成功后删除字段
+      <parse>
+        @type multi_format
+        <pattern>
+          format json
+        </pattern>
+        <pattern>
+          format none
+        </pattern>
+      </parse>
+    </filter>
+
+
+  # 监听配置，一般用于日志聚合用
+  forward.input.conf: |-
+    # 监听通过 TCP 发送的消息
+    <source>
+      @id forward
+      @type forward
+    </source>
+
+  # Prometheus metrics 数据收集 
+  monitoring.conf: |-
+    # Prometheus Exporter Plugin
+    # input plugin that exports metrics
+    <source>
+      @id prometheus
+      @type prometheus
+    </source>
+    <source>
+      @id monitor_agent
+      @type monitor_agent
+    </source>
+    # input plugin that collects metrics from MonitorAgent
+    <source>
+      @id prometheus_monitor
+      @type prometheus_monitor
+      <labels>
+        host ${hostname}
+      </labels>
+    </source>
+    # input plugin that collects metrics for output plugin
+    <source>
+      @id prometheus_output_monitor
+      @type prometheus_output_monitor
+      <labels>
+        host ${hostname}
+      </labels>
+    </source>
+    # input plugin that collects metrics for in_tail plugin
+    <source>
+      @id prometheus_tail_monitor
+      @type prometheus_tail_monitor
+      <labels>
+        host ${hostname}
+      </labels>
+    </source>
+
+  # 输出配置，在此配置输出到ES的配置信息
+  output.conf: |-
+    # match kubernetes
+    <match kubernetes.**>
+      @id elasticsearch_dynamic
+      @type elasticsearch_dynamic
+      @log_level info
+      type_name _doc
+      include_tag_key true
+      host elasticsearch
+      port 9200
+      logstash_format true
+      # 使用 Kubernetes 命名空间名称作为 prefix，方便日志的管理和查询
+      logstash_prefix logstash-${record['kubernetes']['namespace_name']}
+      <buffer>
+        @type file
+        path /var/log/fluentd-buffers/kubernetes-dynamic.system.buffer
+        flush_mode interval
+        retry_type exponential_backoff
+        flush_thread_count 2
+        flush_interval 5s
+        retry_forever
+        retry_max_interval 30
+        chunk_limit_size 2M
+        total_limit_size 500M
+        overflow_action block
+      </buffer>      
+    </match>
+    # match others
+    <match **>
+      @id elasticsearch
+      @type elasticsearch
+      @log_level info
+      type_name _doc
+      include_tag_key true
+      host elasticsearch
+      port 9200
+      logstash_format true
+      <buffer>
+        @type file
+        path /var/log/fluentd-buffers/kubernetes.system.buffer
+        flush_mode interval
+        retry_type exponential_backoff
+        flush_thread_count 2
+        flush_interval 5s
+        retry_forever
+        retry_max_interval 30
+        chunk_limit_size 2M
+        total_limit_size 500M
+        overflow_action block
+      </buffer>
+    </match>

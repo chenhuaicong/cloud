@@ -1,0 +1,35 @@
+kind: CronJob
+apiVersion: batch/v1beta1
+metadata:
+  name: cleanlog
+  namespace: openapi-dev-in
+spec:
+  schedule: '0 16 * * *'
+  concurrencyPolicy: Forbid
+  suspend: false
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          volumes:
+            - name: ywlogs
+              persistentVolumeClaim:
+                claimName: config-fs-pvc-openapi-dev-in-logs
+          containers:
+            - name: cleanlog
+              image: busybox
+              command: ["/bin/sh","-c"]
+              args:
+                - |
+                  for file in $(ls /app/ec/)
+                  do
+                    if [ `ls -l /app/ec/$file|awk '{print $5}'` -gt $((1024*1024)) ]
+                    then
+                      echo " /app/ec/$file 大于1G，准备清空..."
+                      echo "" > /app/ec/$file
+                    fi
+                  done
+              volumeMounts:
+                - name: ywlogs
+                  mountPath: /app/ec/
+          restartPolicy: OnFailure

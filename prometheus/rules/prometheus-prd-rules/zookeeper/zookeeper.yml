@@ -1,0 +1,66 @@
+groups:
+- name: zookeeper
+  rules:
+  - alert: ZookeeperExporterUp
+    expr: up{service="zookeeper"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper {{ $labels.id }} 监控客户端挂了\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperUp
+    expr: zk_up == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper {{ $labels.id }} {{ $labels.zk_host }} 实例挂了！！！\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperMissingLeader
+    expr: sum by (id,project,environment,service,instance,user) (zk_server_leader{environment="prod"}) == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper 集群 {{ $labels.id }} 没有节点标记为leader\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperTooManyLeaders
+    expr: sum by (id,project,environment,service,instance,user) (zk_server_leader{environment="prod"}) > 1
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper 集群 {{ $labels.id }} 标记为leader的节点数大于1，可能发生脑裂！！！\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperNotOk
+    expr: zk_ruok == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper {{ $labels.id }} {{ $labels.zk_host }} 节点运行状态错误\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperAvgLatency
+    expr: zk_avg_latency > 10000
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper {{ $labels.id }} {{ $labels.zk_host }} 节点平均延时大于10s\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperZnodeCount
+    expr: zk_znode_count > 100000
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper {{ $labels.id }} {{ $labels.zk_host }} 节点znode数量大于10万\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperApproximateDataSize
+    expr: zk_approximate_data_size > 1073741824
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper {{ $labels.id }} {{ $labels.zk_host }} 节点快照体积大于1G\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: ZookeeperTooManyFd
+    expr: zk_open_file_descriptor_count / zk_max_file_descriptor_count * 100 > 70
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Zookeeper {{ $labels.id }} {{ $labels.zk_host }} 节点打开文件描述符数量大于70%\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"

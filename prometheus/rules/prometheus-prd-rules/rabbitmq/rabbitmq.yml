@@ -1,0 +1,74 @@
+groups:
+- name: Rabbitmq
+  rules:
+  - alert: RabbitmqExporterUp
+    expr: up{environment=~"pro?d|uat|UAT",job="rabbitmq"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 监控客户端挂了或者实例无响应！！！\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqUp
+    expr: rabbitmq_up{environment=~"pro?d|uat|UAT"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 实例挂了！！！\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqOutOfMemory
+    expr: rabbitmq_node_mem_used{environment=~"pro?d|uat|UAT",self="1"} / rabbitmq_node_mem_limit{environment=~"pro?d|uat|UAT",self="1"} * 100 > 90
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 内存使用超过90%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqDiskFree
+    expr: rabbitmq_node_disk_free{environment=~"pro?d|uat|UAT",self="1"} < rabbitmq_node_disk_free_limit{environment=~"pro?d|uat|UAT",self="1"} * 20
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 磁盘可用空间不足\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqTooManyConnections
+    expr: rabbitmq_connections{environment=~"pro?d|uat|UAT"} > 1000
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 连接数过多\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqTooManyMessagesInQueue
+    expr: rabbitmq_queue_messages_ready{environment=~"pro?d|uat|UAT",self="1",cluster!~".*fms-voucher-center.*|rabbit@gztxy-ec-prd-mq03"} > 10000
+    for: 15m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 虚拟主机 {{ $labels.vhost }} 队列 {{ $labels.queue }} 消息积压数大于1万\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqTooManyMessagesInQueueFmsVoucher
+    expr: rabbitmq_queue_messages_ready{environment=~"pro?d|uat|UAT",self="1",cluster="rabbit@szzb-erp-prd-fms-voucher-center-mq01.ky-tech.com.cn"} > 30000
+    for: 15m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 虚拟主机 {{ $labels.vhost }} 队列 {{ $labels.queue }} 消息积压数大于3万\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqTooManyMessagesInQueueEc
+    expr: rabbitmq_queue_messages_ready{environment=~"pro?d|uat|UAT",self="1",cluster="rabbit@gztxy-ec-prd-mq03"} > 500000
+    for: 15m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 虚拟主机 {{ $labels.vhost }} 队列 {{ $labels.queue }} 消息积压数大于50w万\n当前值：{{ humanize $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqTooManyFd
+    expr: rabbitmq_fd_used{environment=~"pro?d|uat|UAT",self="1"} / rabbitmq_fd_available{environment=~"pro?d|uat|UAT",self="1"} * 100 > 70
+    for: 5s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 节点打开文件描述符数量大于70%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RabbitmqTooManySockets
+    expr: 100 * (rabbitmq_sockets_used{environment=~"pro?d|uat|UAT", self="1"} / (rabbitmq_sockets_available{environment=~"pro?d|uat|UAT", self="1"} + rabbitmq_sockets_used{environment=~"pro?d|uat|UAT", self="1"})) > 50
+    for: 5s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主
+机：{{ $labels.instance }}\n详情：Rabbitmq {{ $labels.id }} 节点Socket使用率大于50%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"

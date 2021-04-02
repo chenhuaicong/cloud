@@ -1,0 +1,87 @@
+groups:
+- name: redis
+  rules:
+  - alert: RedisExporterUp
+    expr: up{environment=~"pro?d|uat|UAT",job="redis"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 监控客户端挂了\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisUp
+    expr: redis_up{environment=~"pro?d|uat|UAT"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 实例挂了！！！\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisOutOfMemory
+    expr: redis_memory_used_bytes{environment=~"pro?d|uat|UAT"} / redis_memory_max_bytes{environment=~"pro?d|uat|UAT"} * 100 > 90 != Inf
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 内存使用超过90%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisTooManyConnections
+    expr: redis_connected_clients{environment=~"pro?d|uat|UAT"} / redis_config_maxclients{environment=~"pro?d|uat|UAT"} * 100 > 90
+    for: 5m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 连接数超过90%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisRejectedConnections
+    expr: increase(redis_rejected_connections_total{environment=~"pro?d|uat|UAT"}[1m]) > 0
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 连接被拒绝\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+#  - alert: RedisTooManyDbKey
+#    expr: redis_db_keys{environment=~"pro?d|uat|UAT"} > 20000000
+#    for: 30s
+#    labels:
+#      severity: "一般告警"
+#    annotations:
+#      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} {{ $labels.db }} KEY 的数量过多\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisClusterFlapping
+    expr: changes(redis_connected_slaves{environment=~"pro?d|uat|UAT"}[1m]) > 1
+    for: 30s
+    labels:
+      severity: "一般告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 从库连接有发生过变更\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisReplicationBroken
+    expr: delta(redis_connected_slaves{environment=~"pro?d|uat|UAT"}[5m]) < 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 从库复制发生中断\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisEvictedKeys
+    expr: rate(redis_evicted_keys_total{environment=~"pro?d|uat|UAT"}[5m]) > 1
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 周期5分钟内驱逐数大于1\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisMasterLinkUp
+    expr: redis_master_link_up{environment=~"pro?d|uat|UAT"} == 0
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 主从连接异常\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisCpu
+    expr: (rate(redis_cpu_sys_seconds_total{environment=~"pro?d|uat|UAT",id!~"gztxy-kuasheng-prd-msg01-10.124.103.197-redis|gztxy-erp-prd-hr-performance01-10.124.103.55-redis"}[1m]) + rate(redis_cpu_user_seconds_total{environment=~"pro?d|uat|UAT",id!~"gztxy-kuasheng-prd-msg01-10.124.103.197-redis|gztxy-erp-prd-hr-performance01-10.124.103.55-redis"}[1m])) * 100 > 90
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} CPU使用率大于90%\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: RedisNetworkOutput
+    expr: rate(redis_net_output_bytes_total{environment=~"pro?d|uat|UAT",id!~"gztxy-kuasheng-prd-msg01-10.124.103.197-redis|gztxy-erp-prd-hr-performance01-10.124.103.55-redis"}[5m]) / 1024 / 1024 > 100
+    for: 30s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n环境：{{ $labels.environment }}\n服务：{{ $labels.service }}\n主机：{{ $labels.instance }}\n详情：Redis {{ $labels.id }} 出口流量大于100M\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"

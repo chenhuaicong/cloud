@@ -1,0 +1,24 @@
+groups:
+- name: canal
+  rules:
+  - alert: CanalUp
+    expr: up{job="canal"} == 0
+    for: 5s
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n主机：{{ $labels.instance }}\n详情：Canal 实例挂了！！！\n当前值：{{ $value }}\n联系人：{{ $labels.user }}\n"
+  - alert: CanalDelay
+    expr: canal_instance_traffic_delay{destination!~"crm21|crm24|crm27|crm30|crm33"} / 1000 > 120
+    for: 2m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n主机：{{ $labels.instance }}\n详情：Canal 与 mysql 主库同步 {{$labels.destination}} 延时大于120s\n当前值：{{humanize $value}}\n联系人：{{ $labels.user }}\n"
+  - alert: CanalDelay2
+    expr: canal_instance_traffic_delay{destination=~"crm21|crm24|crm27|crm30|crm33"} / 1000 > 18000
+    for: 2m
+    labels:
+      severity: "严重告警"
+    annotations:
+      message: "来源：prometheus\n项目：{{ $labels.project }}\n主机：{{ $labels.instance }}\n详情：Canal 与 mysql 主库同步 {{$labels.destination}} 延时大于5小时\n当前值：{{humanize $value}}\n联系人：{{ $labels.user }}\n"
