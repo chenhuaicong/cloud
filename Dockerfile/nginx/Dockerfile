@@ -17,9 +17,9 @@ RUN  wget -P /usr/local/src/ http://soft.kyepm.com/nginx/$nginxVersion.tar.gz  \
 && sed -i "s#nginx/#WebServer/#g" /usr/local/src/$nginxVersion/src/core/nginx.h \
 && sed -i "s#>nginx<#>WebServer<#g" /usr/local/src/$nginxVersion/src/http/ngx_http_special_response.c \
 && sed -i "s#Server: nginx#Server: WebServer#g" /usr/local/src/$nginxVersion/src/http/ngx_http_header_filter_module.c \
-&& cd /usr/local/src/nginx-1.14.2 \
+&& cd /usr/local/src/$nginxVersion \
 && ./configure \
---prefix=/yinzhengjie/softwares/nginx \
+--prefix=/usr/local/nginx \
 --user=nginx --group=nginx \
 --with-http_ssl_module \
 --with-http_v2_module \
@@ -30,11 +30,13 @@ RUN  wget -P /usr/local/src/ http://soft.kyepm.com/nginx/$nginxVersion.tar.gz  \
 --with-stream_ssl_module \
 --with-stream_realip_module \
 && make && make install \
+&& ln -sv /usr/local/nginx/sbin/nginx /usr/sbin/nginx \
 && mkdir -p /usr/local/nginx/conf/vhost/ \
-&& mkdir -p /data/logs/nginx/ \
-&& wget -O /usr/local/nginx/conf/nginx.conf http://soft.kyepm.com/nginx/nginx.conf \
-&& wget -O /usr/local/nginx/conf/vhost/default.conf http://soft.kyepm.com/nginx/default.conf 
+&& mkdir -p /data/logs/nginx/ 
 
+#将nginx的配置文件放在镜像的指定编译安装的目录
+COPY nginx.conf /usr/local/nginx/conf/
+COPY default.conf /usr/local/nginx/conf/vhost/
 
 #创建nginx用户,yum方式安装无需做此步骤，因为默认yum安装会自动创建nginx用户,咱们上面指令了以nginx用户运行,因此我们需要在镜像中创建"nginx用户"
 RUN useradd nginx -s /sbin/nologin -u 2000
